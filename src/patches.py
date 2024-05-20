@@ -1,6 +1,7 @@
 import numpy as np
+import torch
 
-def sample_patch(origin, mask:np.array, patch_numwh:list, pil_or_ten:bool=1):
+def sample_patch(origin, mask:np.array, patch_numwh:list):
     ''' 
     randomly samples patch from masked region (chest).
     width and height of patch is selected by user.
@@ -9,9 +10,8 @@ def sample_patch(origin, mask:np.array, patch_numwh:list, pil_or_ten:bool=1):
     origin: input array of original chest tensor image.
     mask: segmented tensor image. 
     patch_numwh: list of number, width and heigh of patch. 
-    pil_or_ten: output patches as pil(1; default) or tensor img(0).
     # return
-    list of sampled patch pil images
+    list of sampled patch Tensor images.
     '''
     patch_num, patch_w, patch_h = 0, 0, 0
     if len(patch_numwh) != 3:
@@ -26,10 +26,10 @@ def sample_patch(origin, mask:np.array, patch_numwh:list, pil_or_ten:bool=1):
     np_mask = np.array(mask)
     lung_axes = np.argwhere(np_mask == 1) 
 
-    patch_idexes = np.random.choice(range(len(lung_axes)), patch_num)
-    patch_axes = lung_axes[patch_idexes]
+    patch_indexes = np.random.choice(range(len(lung_axes)), patch_num)
+    patch_axes = lung_axes[patch_indexes]
     
-    list_patches_np = []
+    list_patches = []
 
     for patch_x, patch_y in patch_axes:
 
@@ -66,9 +66,24 @@ def sample_patch(origin, mask:np.array, patch_numwh:list, pil_or_ten:bool=1):
             d_dy = dhy
             u_dy = dhy
 
-        patch_np = origin_np[patch_x-l_dx:patch_x+r_dx+1, 
-                            patch_y-d_dy:patch_y+u_dy+1]
+        x_0, x_1, y_0, y_1 = 0, 0, 0, 0 # initial values
 
-        list_patches_np.append(patch_np)
+        if (patch_x-l_dx < 0): x_0 = 0
+        else: x_0 = patch_x-l_dx
+        if (patch_x+r_dx+1 > origin_np.shape[0]): x_1 = origin_np.shape[0]
+        else: x_1 = patch_x+r_dx+1
+        if (patch_y-d_dy < 0): y_0 = 0
+        else: y_0 = patch_y-d_dy
+        if (patch_y+u_dy+1 > origin_np.shape[1]): y_1 = origin_np.shape[1]
+        else: y_1 = patch_y+u_dy+1
 
-    return list_patches_np
+        patch_np = origin_np[x_0:x_1, y_0:y_1]
+
+        # patch_np = origin_np[patch_x-l_dx:patch_x+r_dx+1, 
+        #                     patch_y-d_dy:patch_y+u_dy+1]
+
+        patch = torch.from_numpy(patch_np)
+
+        list_patches.append(patch)
+
+    return list_patches

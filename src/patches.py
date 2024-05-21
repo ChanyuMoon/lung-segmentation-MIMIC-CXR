@@ -13,6 +13,7 @@ def sample_patch(origin, mask:np.array, patch_numwh:list):
     # return
     list of sampled patch Tensor images.
     '''
+    print("start hello")
     patch_num, patch_w, patch_h = 0, 0, 0
     if len(patch_numwh) != 3:
         ValueError("should contain all three values (patch num, width, heigh)")
@@ -77,13 +78,13 @@ def sample_patch(origin, mask:np.array, patch_numwh:list):
         if (patch_y+u_dy+1 > origin_np.shape[1]): y_1 = origin_np.shape[1]
         else: y_1 = patch_y+u_dy+1
 
-        patch_np = origin_np[x_0:x_1, y_0:y_1]
+        print(f"x_0: {x_0}, x_1: {x_1}, y_0: {y_0}, y_1: {y_1}")
 
-        # patch_np = origin_np[patch_x-l_dx:patch_x+r_dx+1, 
-        #                     patch_y-d_dy:patch_y+u_dy+1]
+        patch_np = origin_np[y_0:y_1, x_0:x_1]
+        print("patch shape: ",patch_np.shape)
 
         patch = torch.from_numpy(patch_np)
 
         list_patches.append(patch)
-
+    print("hello")
     return list_patches
